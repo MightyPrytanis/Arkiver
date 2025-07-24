@@ -62,29 +62,64 @@ def parse_conversations():
         title = conversation.get('title', 'Untitled')
         mapping = conversation.get('mapping', {})
         
-        # Extract all text from the conversation
-        all_text = []
+        # Extract all messages with their order
+        messages = []
         for node_id, node_data in mapping.items():
             text = extract_text_from_message(node_data)
             if text.strip():
-                all_text.append(text)
+                messages.append({
+                    'text': text,
+                    'node_id': node_id,
+                    'matches_keywords': bool(search_keywords_in_text(text, keyword_to_project))
+                })
         
-        conversation_text = ' '.join(all_text)
+        # Find messages that match keywords and get context
+        matching_messages = []
+        found_projects = set()
         
-        # Search for keywords
-        found_projects = search_keywords_in_text(conversation_text, keyword_to_project)
-        
-        conversation_info = {
-            'title': title,
-            'create_time': conversation.get('create_time'),
-            'update_time': conversation.get('update_time'),
-            'text_preview': conversation_text[:200] + '...' if len(conversation_text) > 200 else conversation_text
-        }
+        for i, message in enumerate(messages):
+            if message['matches_keywords']:
+                projects = search_keywords_in_text(message['text'], keyword_to_project)
+                found_projects.update(projects)
+                
+                # Get context messages (previous and next)
+                context_messages = []
+                
+                # Previous message (if exists and doesn't match keywords)
+                if i > 0 and not messages[i-1]['matches_keywords']:
+                    context_messages.append(f"PREVIOUS: {messages[i-1]['text']}")
+                
+                # Current message
+                context_messages.append(f"MATCH: {message['text']}")
+                
+                # Next message (if exists and doesn't match keywords)
+                if i < len(messages) - 1 and not messages[i+1]['matches_keywords']:
+                    context_messages.append(f"NEXT: {messages[i+1]['text']}")
+                
+                matching_messages.append({
+                    'context': '\n\n'.join(context_messages),
+                    'projects': projects
+                })
         
         if found_projects:
+            conversation_info = {
+                'title': title,
+                'create_time': conversation.get('create_time'),
+                'update_time': conversation.get('update_time'),
+                'matching_messages': matching_messages
+            }
+            
             for project in found_projects:
                 categorized_conversations[project].append(conversation_info)
         else:
+            # For uncategorized, just show a preview
+            all_text = ' '.join([msg['text'] for msg in messages])
+            conversation_info = {
+                'title': title,
+                'create_time': conversation.get('create_time'),
+                'update_time': conversation.get('update_time'),
+                'text_preview': all_text[:200] + '...' if len(all_text) > 200 else all_text
+            }
             uncategorized_conversations.append(conversation_info)
     
     # Print results
@@ -93,14 +128,21 @@ def parse_conversations():
         conversations_list = categorized_conversations[project]
         print(f"\n{project.upper()} ({len(conversations_list)} conversations):")
         for conv in conversations_list:
-            print(f"  - {conv['title']}")
-            if conv['text_preview'].strip():
-                print(f"    Preview: {conv['text_preview']}")
+            print(f"\n  === {conv['title']} ===")
+            for match in conv['matching_messages']:
+                print(f"    Projects: {', '.join(match['projects'])}")
+                print(f"    Context:")
+                # Indent each line of the context
+                for line in match['context'].split('\n'):
+                    print(f"      {line}")
+                print()  # Empty line between matches
     
     print(f"\n=== UNCATEGORIZED CONVERSATIONS ===")
     print(f"Found {len(uncategorized_conversations)} conversations without matching keywords:")
     for conv in uncategorized_conversations[:10]:  # Show first 10
         print(f"  - {conv['title']}")
+        if 'text_preview' in conv and conv['text_preview'].strip():
+            print(f"    Preview: {conv['text_preview']}")
     
     if len(uncategorized_conversations) > 10:
         print(f"  ... and {len(uncategorized_conversations) - 10} more")
