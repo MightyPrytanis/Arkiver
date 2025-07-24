@@ -194,6 +194,18 @@ def parse_conversations():
     print(f"Categorized: {total_categorized}")
     print(f"Uncategorized: {len(uncategorized_conversations)}")
     
+    # Option to delete output files for security
+    delete_files = input("\nDelete output files for security? (y/N): ").lower().strip()
+    if delete_files == 'y':
+        import os
+        for filename in output_files:
+            try:
+                os.remove(filename)
+                print(f"Deleted: {filename}")
+            except FileNotFoundError:
+                pass
+        print("Output files deleted for security.")
+    
     return categorized_conversations, uncategorized_conversations
 
 if __name__ == "__main__":
