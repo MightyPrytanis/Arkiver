@@ -116,7 +116,7 @@ def parse_conversations():
 
 if __name__ == "__main__":
     try:
-        categorized, uncategorized = parse_conversations()
+        parse_conversations()
     except FileNotFoundError as e:
         print(f"Error: Could not find file - {e}")
     except Exception as e:
