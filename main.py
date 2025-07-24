@@ -122,20 +122,33 @@ def parse_conversations():
             }
             uncategorized_conversations.append(conversation_info)
     
-    # Print results
-    print("=== CATEGORIZED CONVERSATIONS ===")
-    for project in sorted(categorized_conversations.keys()):
-        conversations_list = categorized_conversations[project]
-        print(f"\n{project.upper()} ({len(conversations_list)} conversations):")
-        for conv in conversations_list:
-            print(f"\n  === {conv['title']} ===")
+    # Reorganize by project - collect all messages for each project
+    messages_by_project = defaultdict(list)
+    
+    for project_name in categorized_conversations.keys():
+        for conv in categorized_conversations[project_name]:
             for match in conv['matching_messages']:
-                print(f"    Projects: {', '.join(match['projects'])}")
-                print(f"    Context:")
-                # Indent each line of the context
-                for line in match['context'].split('\n'):
-                    print(f"      {line}")
-                print()  # Empty line between matches
+                if project_name in match['projects']:
+                    messages_by_project[project_name].append({
+                        'conversation_title': conv['title'],
+                        'context': match['context'],
+                        'all_projects': match['projects']
+                    })
+    
+    # Print results grouped by project
+    print("=== MESSAGES BY PROJECT ===")
+    for project in sorted(messages_by_project.keys()):
+        messages_list = messages_by_project[project]
+        print(f"\n{project.upper()} ({len(messages_list)} messages):")
+        
+        for i, message in enumerate(messages_list, 1):
+            print(f"\n  === Message {i}: {message['conversation_title']} ===")
+            print(f"    Also matches projects: {', '.join([p for p in message['all_projects'] if p != project])}" if len(message['all_projects']) > 1 else "    Only matches this project")
+            print(f"    Context:")
+            # Indent each line of the context
+            for line in message['context'].split('\n'):
+                print(f"      {line}")
+            print()  # Empty line between messages
     
     print(f"\n=== UNCATEGORIZED CONVERSATIONS ===")
     print(f"Found {len(uncategorized_conversations)} conversations without matching keywords:")
