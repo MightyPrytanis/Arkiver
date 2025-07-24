@@ -135,30 +135,57 @@ def parse_conversations():
                         'all_projects': match['projects']
                     })
     
-    # Print results grouped by project
-    print("=== MESSAGES BY PROJECT ===")
+    # Write results to separate files for each project
+    output_files = []
+    
     for project in sorted(messages_by_project.keys()):
         messages_list = messages_by_project[project]
-        print(f"\n{project.upper()} ({len(messages_list)} messages):")
+        filename = f"{project.lower().replace(' ', '_')}_messages.txt"
+        output_files.append(filename)
         
-        for i, message in enumerate(messages_list, 1):
-            print(f"\n  === Message {i}: {message['conversation_title']} ===")
-            print(f"    Also matches projects: {', '.join([p for p in message['all_projects'] if p != project])}" if len(message['all_projects']) > 1 else "    Only matches this project")
-            print(f"    Context:")
-            # Indent each line of the context
-            for line in message['context'].split('\n'):
-                print(f"      {line}")
-            print()  # Empty line between messages
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(f"=== {project.upper()} MESSAGES ===\n")
+            f.write(f"Total messages: {len(messages_list)}\n\n")
+            
+            for i, message in enumerate(messages_list, 1):
+                f.write(f"=== Message {i}: {message['conversation_title']} ===\n")
+                if len(message['all_projects']) > 1:
+                    f.write(f"Also matches projects: {', '.join([p for p in message['all_projects'] if p != project])}\n")
+                else:
+                    f.write("Only matches this project\n")
+                f.write("Context:\n")
+                
+                # Write context with proper indentation
+                for line in message['context'].split('\n'):
+                    f.write(f"  {line}\n")
+                f.write("\n")  # Empty line between messages
     
-    print(f"\n=== UNCATEGORIZED CONVERSATIONS ===")
-    print(f"Found {len(uncategorized_conversations)} conversations without matching keywords:")
-    for conv in uncategorized_conversations[:10]:  # Show first 10
-        print(f"  - {conv['title']}")
-        if 'text_preview' in conv and conv['text_preview'].strip():
-            print(f"    Preview: {conv['text_preview']}")
+    # Write uncategorized conversations to a separate file
+    uncategorized_filename = "uncategorized_conversations.txt"
+    output_files.append(uncategorized_filename)
     
-    if len(uncategorized_conversations) > 10:
-        print(f"  ... and {len(uncategorized_conversations) - 10} more")
+    with open(uncategorized_filename, 'w', encoding='utf-8') as f:
+        f.write("=== UNCATEGORIZED CONVERSATIONS ===\n")
+        f.write(f"Found {len(uncategorized_conversations)} conversations without matching keywords:\n\n")
+        
+        for conv in uncategorized_conversations:
+            f.write(f"- {conv['title']}\n")
+            if 'text_preview' in conv and conv['text_preview'].strip():
+                f.write(f"  Preview: {conv['text_preview']}\n")
+            f.write("\n")
+    
+    # Print summary to console
+    print("=== FILE OUTPUT COMPLETE ===")
+    print("Created the following output files:")
+    for filename in output_files:
+        print(f"  - {filename}")
+    
+    print(f"\n=== MESSAGES BY PROJECT ===")
+    for project in sorted(messages_by_project.keys()):
+        messages_list = messages_by_project[project]
+        print(f"{project.upper()}: {len(messages_list)} messages")
+    
+    print(f"\nUNCATEGORIZED: {len(uncategorized_conversations)} conversations")
     
     # Summary
     total_categorized = sum(len(convs) for convs in categorized_conversations.values())
