@@ -1,7 +1,49 @@
 
+#!/usr/bin/env python3
+"""
+LEGACY ARKIVER - DEPRECATED
+
+This is the original Arkiver script, preserved for reference only.
+
+⚠️ THIS SCRIPT IS DEPRECATED ⚠️
+
+Please use the new NewArkiver system instead:
+    python newarkiver.py
+
+The new system provides:
+- Same functionality with identical output
+- Better error handling and logging  
+- Configurable processing pipeline
+- Extensible architecture
+- Type safety and better maintainability
+
+See README.md and MIGRATION.md for details.
+"""
+
+import sys
 import json
 import re
 from collections import defaultdict
+
+# Warn users about deprecation
+print("⚠️ WARNING: You are using the deprecated legacy Arkiver script!")
+print("Please switch to the new NewArkiver system:")
+print("    python newarkiver.py")
+print()
+print("The new system provides the same functionality with many improvements.")
+print("See README.md for details.")
+print()
+
+# Ask user if they want to continue with legacy script
+try:
+    response = input("Continue with legacy script? (y/N): ").lower().strip()
+    if response != 'y':
+        print("Exiting. Please use: python newarkiver.py")
+        sys.exit(0)
+    print()
+except (EOFError, KeyboardInterrupt):
+    print("\nExiting. Please use: python newarkiver.py") 
+    sys.exit(0)
 
 def load_keywords():
     """Load keywords and their associated projects from the text file."""
