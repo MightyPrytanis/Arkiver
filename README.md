@@ -13,6 +13,7 @@ This project represents the merger of **Arkiver** (conversation analysis tool) a
 - **Configurable Processing**: JSON-based configuration for all pipeline components
 - **Extensible Design**: Easy to add new data sources, processing methods, and output formats
 - **Modern Python**: Clean, type-hinted code with proper error handling and logging
+- **MCP Integration**: Ready-to-use tools for Model Context Protocol (MCP) servers, including Cyrano
 
 ## Quick Start
 
@@ -36,6 +37,32 @@ This project represents the merger of **Arkiver** (conversation analysis tool) a
 ### First Run
 
 On first run, NewArkiver will create a `config.json` file with default settings. The system is pre-configured to work with the existing conversation data and keyword files.
+
+## MCP Integration
+
+Arkiver components are now available as MCP (Model Context Protocol) tools for integration with MCP servers like Cyrano:
+
+```python
+# Quick integration with Cyrano MCP server
+from arkiver import arkiver_plugin
+arkiver_plugin.install(cyrano_server)
+
+# Or get tools manually
+from arkiver import get_arkiver_tools, handle_arkiver_tool_call
+tools = get_arkiver_tools()  # Get 7 data extraction tools
+result = handle_arkiver_tool_call("extract_conversations", {"file_path": "data.json"})
+```
+
+Available MCP tools:
+- `extract_conversations` - Parse ChatGPT conversation JSON files
+- `extract_text_content` - Extract content from text files  
+- `categorize_with_keywords` - Categorize text using keyword matching
+- `process_with_regex` - Process text with regex patterns
+- `generate_categorized_files` - Create organized output files
+- `run_extraction_pipeline` - Execute complete processing pipelines
+- `create_arkiver_config` - Generate configuration files
+
+See [MCP_INTEGRATION.md](MCP_INTEGRATION.md) for detailed integration guide.
 
 ## Architecture
 
